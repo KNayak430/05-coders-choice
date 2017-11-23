@@ -16,53 +16,30 @@ defmodule Player do
 
 end
 
-defmodule Player_Cache do
+defmodule DnDTool.Player_Cache do
 
-  def start_link() do
-    Agent.start_link(fn -> load_players() end, name: __MODULE__ )
+  def add_player(cache, string) do
+    player_map = string_to_player(string)
+    Map.put(cache, player_map.name, player_map)
   end
 
   def load_players() do
 
-    {:ok, save_text } = File.read("../../save/save.txt")
+    {:ok, save_text } = File.read("save/save.txt")
+
     save_text
     |> String.split("\r\n")
     |> Enum.map(fn a -> String.replace(a, " ", "") end)
-    |> Enum.map(fn a -> String.split(a, ",") end)
-    |> create_player_map
-  end
+    |> Enum.map(&string_to_player/1)
+    |> Enum.reduce(%{}, fn(x, acc) -> Map.put(acc, x.name, x) end)
 
-  def create_player([name | args]) do
-    Enum.reduce(args, %Player{name: String.replace_leading(name, "name:", "") }, fn(x, acc) -> put_in_struct(x, acc) end)
-  end
-
-  def create_player_map(list) do
-    create_player_map(%{}, list)
-  end
-
-  def create_player_map(map, []) do
-    map
-  end
-
-  def create_player_map(map, [ h | t ]) do
-    create_player_map(Map.put(map, String.replace_leading(List.first(h), "name:", "" ), create_player(h)), t)
-  end
-
-  defp put_in_struct(x, acc) do
-    key = x
-          |> String.split(":")
-          |> List.first
-    value = x
-          |> String.split(":")
-          |> List.last
-
-    Map.put(acc, key, value)
   end
 
   def save_players(cache) do
+
     save_text = cache
                 |> Map.keys
-                |> Enum.map(fn key -> stringerize(Map.get(cache, key)) end)
+                |> Enum.map(fn key -> player_to_string(Map.get(cache, key)) end)
                 |> Enum.join("\r\n")
 
 
@@ -70,15 +47,34 @@ defmodule Player_Cache do
 
   end
 
+  def get_player(cache, key) do
+    cache.key
+  end
+
+  ####################
+  # HELPER FUNCTIONS #
+  ####################
+
   # Takes the player struct and returns a format that can be loaded and saved
-  def stringerize(map) do
+  defp player_to_string(map) do
     map_text = map
                |> Map.from_struct()
                |> Map.to_list
-               |> Enum.map(fn a -> Tuple.to_list(a) end)
+               |> Enum.map(&Tuple.to_list/1)
                |> Enum.map(fn a -> Enum.join(a, ":") end)
                |> Enum.join(",")
    "name:" <> Map.get(map, :name) <> "," <> map_text
+  end
+
+  # Takes the string and returns the player data in Player format
+  defp string_to_player(string) do
+    map = string
+          |> String.split(",") #["name:\"Bob\"", "agility:1", "strength:20"]
+          |> Enum.map(fn a -> String.split(a, ":") end) #[["name","\"Bob\""], ["agility","1"], ["strength","20"]]
+          |> Enum.reduce(%{}, fn([key, value], map) -> Map.put(map, String.to_atom(key), value) end)
+
+    struct(Player, map)
+
   end
 
 end

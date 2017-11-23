@@ -6,11 +6,12 @@ defmodule DnDTool.Application do
     import Supervisor.Spec, warn: false
 
     children = [
-      worker(DnDTool.Dice_Server, args, restart: :permanent)
+      worker(DnDTool.Dice_Server, args, restart: :permanent),
+      worker(DnDTool.Player_Cache_Server, args, restart: :permanent)
     ]
 
     opts = [strategy: :one_for_one, name: DnDTool.Supervisor]
     Supervisor.start_link(children, opts)
-    
+
   end
 end
