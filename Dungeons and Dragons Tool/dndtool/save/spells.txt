@@ -1,0 +1,2 @@
+name:Cone of Acid,damage:3d10,name:Cone of Acid,on_save:Target takes half damage,save:constitution
+name:Flame Strike,damage:4d6,name:Flame Strike,on_save:Target takes half damage,save:dexterity
