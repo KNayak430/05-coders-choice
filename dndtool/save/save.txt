@@ -1,0 +1,1 @@
+name:Freddy,strength:18,deception:3,intelligence:15,charisma:11
